@@ -298,13 +298,6 @@ Interactive high-resolution visualizations are available at
 
 https://galdi.eurecom.io/ExFMA2026_supplementary_material.html
 
-The webpage contains
-
-- FLAS visualizations
-- t-SNE visualizations
-- thresholded CAM visualizations
-- zoomable high-resolution figures
-
 ---
 
 # Further Reading
