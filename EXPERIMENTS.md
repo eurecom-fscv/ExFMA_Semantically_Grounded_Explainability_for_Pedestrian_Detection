@@ -85,9 +85,3 @@ summarize_cam_heatmaps
 `evaluate_detection_ap.m` calls `evaluateDetectionPrecision` from the MATLAB
 Computer Vision Toolbox. The Python version implements an equivalent metric in
 `pdestre_experiments/detection_metrics.py`.
-
-## Legacy script names
-
-The repository previously used less descriptive names such as
-`demo_explainability_noise.py`, `ComputeDetectionAP.m`, and `AnalyseExpMap.m`.
-Those files were renamed during the public release refactor.
