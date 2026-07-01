@@ -1,86 +1,159 @@
-# Pedestron Explainability Experiments
+# Semantically Grounded Explainability for Pedestrian Detection Using Anatomically Grounded Occlusions and Grid-Based Visualization
 
-Public release of the explainability experiment code for pedestrian detection on
-the P-DESTRE dataset. This repository is a focused subset built on two existing
-codebases:
+Official implementation accompanying the paper:
 
-- [Pedestron](https://github.com/hasanirtiza/Pedestron) — pedestrian detection
-  framework (SemanticPedestrianDetection)
-- [MMDetection](https://github.com/open-mmlab/mmdetection) — object detection
-  toolbox (vendored under `mmdet/`)
+> **Semantically Grounded Explainability for Pedestrian Detection Using Anatomically Grounded Occlusions and Grid-Based Visualization**  
+> **Chiara Galdi** and **Romain Giot**  
+> *IEEE International Conference on Content-Based Multimedia Indexing (CBMI), ExFMA Special Session, 2026*
 
-It contains only the scripts and dependencies needed to reproduce the paper
-experiments. Supplementary material for the grid visualizations (FLAS) is
-available at
-[https://galdi.eurecom.io/ExFMA2026_supplementary_material.html](https://galdi.eurecom.io/ExFMA2026_supplementary_material.html).
+---
 
-## Contents
+## Introduction
+
+Explainable Artificial Intelligence (XAI) aims to understand how and why machine learning models make their decisions. While popular explainability techniques such as Class Activation Maps (CAMs) identify image regions contributing to a prediction, they often provide limited semantic insight into **why** these regions are important from a human perspective.
+
+This repository accompanies our CBMI 2026 paper, which introduces a semantically grounded explainability framework for pedestrian detection. The proposed approach combines:
+
+- **Local explainability**, obtained through anatomically grounded occlusions and Ablation-CAM;
+- **Global explainability**, obtained through FLAS and t-SNE grid visualizations of pedestrian representations.
+
+Instead of relying on arbitrary perturbations, body regions are defined using anatomically meaningful proportions inspired by Leonardo da Vinci's *Vitruvian Man*, enabling a more intuitive interpretation of detector behavior.
+
+Our experiments reveal an important observation: although the detector attention is primarily concentrated on the **leg region**, the largest degradation in detection performance occurs when the **upper body** is occluded. This suggests that pedestrian detectors rely on complementary semantic body cues beyond the most visually salient regions.
+
+This repository contains all scripts required to reproduce the experiments presented in the paper, including:
+
+- pedestrian detection using Pedestron,
+- Ablation-CAM explainability,
+- anatomically grounded occlusion experiments,
+- detection performance evaluation,
+- average CAM visualization,
+- generation of the figures reported in the paper.
+
+Interactive high-resolution FLAS and t-SNE visualizations (including CAM-thresholded representations) are available at:
+
+**https://galdi.eurecom.io/ExFMA2026_supplementary_material.html**
+
+---
+
+# Repository Structure
+
+This repository is a lightweight research release built on two existing projects:
+
+- **Pedestron**
+  https://github.com/hasanirtiza/Pedestron
+
+- **MMDetection**
+  https://github.com/open-mmlab/mmdetection
+
+Only the scripts and dependencies required to reproduce the experiments of the paper are included.
+
+```
+.
+├── configs/
+├── mmdet/
+├── pdestre_experiments/
+├── extract_pdestre_frames.py
+├── generate_ablation_cam.py
+├── generate_ablation_cam_occluded.py
+├── evaluate_detection_ap.py
+├── summarize_cam_heatmaps.py
+├── INSTALL.md
+├── EXPERIMENTS.md
+└── README.md
+```
+
+### Main scripts
 
 | Script | Description |
 |--------|-------------|
-| `extract_pdestre_frames.py` / `.m` | Extract annotated frames from P-DESTRE videos |
-| `generate_ablation_cam.py` | Detector + AblationCAM baseline |
-| `generate_ablation_cam_occluded.py` | AblationCAM with body-part occlusions |
-| `evaluate_detection_ap.py` / `.m` | Detection average-precision evaluation |
-| `summarize_cam_heatmaps.py` / `.m` | CAM heatmap summarization |
-| `pdestre_experiments/` | Shared Python helpers |
-| `mmdet/` | MMDetection-based detector framework |
-| `configs/elephant/p_destre/` | P-DESTRE model configuration |
+| `extract_pdestre_frames.py` | Extract annotated frames from P-DESTRE videos |
+| `generate_ablation_cam.py` | Generate Ablation-CAM explanations |
+| `generate_ablation_cam_occluded.py` | Generate explanations under anatomical occlusions |
+| `evaluate_detection_ap.py` | Evaluate pedestrian detection performance |
+| `summarize_cam_heatmaps.py` | Compute average Ablation-CAM heatmaps |
 
-## Installation
+---
 
-### 1. Clone this repository
+# Installation
+
+## 1. Clone the repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
-cd YOUR_REPO
+git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git
+cd YOUR_REPOSITORY
 ```
 
-### 2. Create a Python environment and install Pedestron
+---
+
+## 2. Create the environment
 
 ```bash
 conda create -n pedestron-exp python=3.7 -y
 conda activate pedestron-exp
 
 conda install cython
-# Install PyTorch + torchvision for your CUDA version: https://pytorch.org/
+```
 
+Install the PyTorch version corresponding to your CUDA installation:
+
+https://pytorch.org
+
+Install the repository
+
+```bash
 pip install -v -e .
 ```
 
-See [INSTALL.md](INSTALL.md) for full system requirements and troubleshooting.
+See **INSTALL.md** for complete installation instructions.
 
-### 3. Install explainability dependencies
+---
+
+## 3. Install explainability dependencies
 
 ```bash
 pip install opencv-python scipy pillow
-# Install a Pedestron-compatible fork of pytorch-grad-cam that provides:
-#   AblationLayerPedestron, pedestron_ablation_reshape_transform,
-#   FasterRCNNBoxScoreTarget
 ```
 
-### 4. Prepare the P-DESTRE dataset
+Install a Pedestron-compatible version of **pytorch-grad-cam** supporting:
 
-Obtain P-DESTRE separately and place it under:
+- AblationLayerPedestron
+- pedestron_ablation_reshape_transform
+- FasterRCNNBoxScoreTarget
+
+---
+
+## 4. Prepare the P-DESTRE dataset
+
+Download the P-DESTRE dataset separately.
+
+Expected folder structure:
 
 ```
 data/P_Destre/
-  annotation/   # one .txt file per video
-  videos/       # source .MP4 files
-  frames/       # created by extract_pdestre_frames (step 1 below)
+
+    annotation/
+    videos/
+    frames/
 ```
 
-Download or train a detector checkpoint compatible with
-`configs/elephant/p_destre/cascade_hrnet.py`.
+Generate the `frames/` directory using the extraction script described below.
 
-## How to run
+Download (or train) a detector checkpoint compatible with
 
-The experiment pipeline has five steps. Python commands are shown below;
-MATLAB equivalents are listed in [EXPERIMENTS.md](EXPERIMENTS.md).
+```
+configs/elephant/p_destre/cascade_hrnet.py
+```
 
-### Step 1 — Extract frames
+---
 
-Extract PNG frames for all annotated frames in the second half of the dataset:
+# Reproducing the Experiments
+
+The experimental pipeline consists of five stages.
+
+---
+
+## Step 1 — Extract frames
 
 ```bash
 python extract_pdestre_frames.py \
@@ -89,47 +162,54 @@ python extract_pdestre_frames.py \
   --output-dir data/P_Destre/frames
 ```
 
-### Step 2 — Generate baseline CAMs (no occlusion)
+---
+
+## Step 2 — Generate baseline Ablation-CAM
 
 ```bash
 python generate_ablation_cam.py \
   configs/elephant/p_destre/cascade_hrnet.py \
-  /path/to/checkpoint.pth \
+  checkpoint.pth \
   data/P_Destre/frames \
   outputs/visible_PDestre_out
 ```
 
-This writes per-frame `*_grayscale_cam.mat` and `*_bbox.mat` files.
+---
 
-### Step 3 — Generate CAMs with body-part occlusions
+## Step 3 — Anatomical occlusion experiments
 
-Repeat for each body region of interest (`head`, `top`, `bottom`, `legs`):
+Run once for each occlusion region:
+
+- head
+- top
+- bottom
+- legs
+
+Example:
 
 ```bash
 python generate_ablation_cam_occluded.py \
   configs/elephant/p_destre/cascade_hrnet.py \
-  /path/to/checkpoint.pth \
+  checkpoint.pth \
   data/P_Destre/frames \
   outputs/visible_PDestre_head_exp_out \
   --gt-annotation-dir data/P_Destre/annotation \
   --occlusion-region head
 ```
 
-Use matching output directories for other regions, e.g.
-`outputs/visible_PDestre_top_exp_out`, `outputs/visible_PDestre_bottom_exp_out`,
-`outputs/visible_PDestre_legs_exp_out`.
+---
 
-### Step 4 — Evaluate detection average precision
+## Step 4 — Detection evaluation
 
 ```bash
 python evaluate_detection_ap.py \
-  --detection-dir outputs/visible_PDestre_bottom_exp_out \
+  --detection-dir outputs/visible_PDestre_head_exp_out \
   --annotation-dir data/P_Destre/annotation
 ```
 
-### Step 5 — Summarize average heatmaps
+---
 
-Average CAM activations over ground-truth pedestrian boxes and save a summary PNG:
+## Step 5 — Average CAM heatmaps
 
 ```bash
 python summarize_cam_heatmaps.py \
@@ -138,143 +218,119 @@ python summarize_cam_heatmaps.py \
   --output-image outputs/mean_map_head_out.png
 ```
 
-### Optional — MATLAB
+---
 
-If you prefer MATLAB for steps 1, 4, and 5, set the environment variables
-described in [EXPERIMENTS.md](EXPERIMENTS.md) and run:
+# Results
 
-```matlab
-extract_pdestre_frames
-evaluate_detection_ap
-summarize_cam_heatmaps
+## Detection performance
+
+| Occlusion | AP | Recall | Precision | F1 |
+|-----------|----|---------|-----------|----|
+| Full body (original) | 85.68 | 57.94 | 88.79 | 0.701 |
+| Full body (¼ size) | 86.51 | 57.38 | 90.28 | 0.701 |
+| Lower body | 68.37 | 49.74 | 80.52 | 0.615 |
+| Upper body | **35.25** | 30.22 | 59.96 | 0.401 |
+| Head | 81.98 | 55.09 | 87.45 | 0.674 |
+| Legs | 79.83 | 54.53 | 86.26 | 0.668 |
+
+The largest degradation occurs when the **upper body** is occluded, despite Ablation-CAM indicating the strongest attention on the **leg region**, highlighting the difference between visual saliency and semantic importance.
+
+---
+
+## Anatomically grounded occlusions
+
+<p align="center">
+<img src="img_paper/GoldenRatio.png" width="420">
+</p>
+
+Body regions are partitioned into:
+
+- Head (top 1/8)
+- Upper body (top half)
+- Lower body (bottom half)
+- Legs (bottom quarter)
+
+These anatomically meaningful regions are used to generate the occlusion experiments.
+
+---
+
+## Experimental pipeline
+
+<p align="center">
+<img src="img_paper/CBMI_ExFMA.png" width="720">
+</p>
+
+The framework combines:
+
+1. Anatomically grounded occlusions
+2. Pedestrian detection
+3. Ablation-CAM local explainability
+4. FLAS / t-SNE global explainability
+
+---
+
+## Average Ablation-CAM heatmaps
+
+Average heatmaps are computed by
+
+- cropping pedestrians using ground-truth bounding boxes,
+- discarding bounding boxes with aspect ratio < 0.6,
+- resizing each crop to 50×100 pixels,
+- averaging all normalized CAMs.
+
+<p align="center">
+<img src="img_paper/avg_full_jet.png" width="120">
+</p>
+
+Occlusion experiments:
+
+| Head | Upper body | Lower body | Legs |
+|:----:|:----------:|:----------:|:----:|
+| <img src="img_paper/avg_head_jet.png" width="120"> | <img src="img_paper/avg_upper_jet.png" width="120"> | <img src="img_paper/avg_lower_jet.png" width="120"> | <img src="img_paper/avg_legs_jet.png" width="120"> |
+
+Under upper-body occlusion, the detector shifts attention toward the remaining lower-body structures. Conversely, when the lower body is occluded, attention redistributes toward the head and torso.
+
+---
+
+# Supplementary Material
+
+Interactive high-resolution visualizations are available at
+
+https://galdi.eurecom.io/ExFMA2026_supplementary_material.html
+
+The webpage contains
+
+- FLAS visualizations
+- t-SNE visualizations
+- thresholded CAM visualizations
+- zoomable high-resolution figures
+
+---
+
+# Further Reading
+
+- `INSTALL.md`
+- `EXPERIMENTS.md`
+- Pedestron
+- MMDetection
+
+---
+
+# Citation
+
+If you use this repository, please cite:
+
+```bibtex
+@inproceedings{Galdi2026ExFMA,
+  author    = {Chiara Galdi and Romain Giot},
+  title     = {Semantically Grounded Explainability for Pedestrian Detection Using Anatomically Grounded Occlusions and Grid-Based Visualization},
+  booktitle = {IEEE International Conference on Content-Based Multimedia Indexing (CBMI)},
+  year      = {2026}
+}
 ```
 
-## Results
+---
 
-### Detection performance under anatomical occlusions
+# License
 
-Pedestrian detection performance under different anatomically grounded occlusion
-settings. The table reports Average Precision (AP), Recall, Precision, and
-F1-score, enabling analysis of the contribution of different body regions to
-detector performance.
-
-| Method | AP | Recall | Precision | F1 Score |
-|--------|-----|--------|-----------|----------|
-| Full body — orig. size | 85.68 | 57.94 | 88.79 | 0.701 |
-| Full body — resized ¼ | 86.51 | 57.38 | 90.28 | 0.701 |
-| Lower body occluded | 68.37 | 49.74 | 80.52 | 0.615 |
-| Upper body occluded | 35.25 | 30.22 | 59.96 | 0.401 |
-| Head occluded | 81.98 | 55.09 | 87.45 | 0.674 |
-| Legs occluded | 79.83 | 54.53 | 86.26 | 0.668 |
-
-Upper-body occlusion causes the largest drop in AP (35.25), while head and legs
-occlusions preserve relatively higher performance. Resizing the input to one
-quarter of the original resolution has a minor effect compared with anatomical
-masking.
-
-### Anatomical partitioning
-
-Body regions used for occlusion are defined from golden-ratio proportions on the
-pedestrian bounding box: head (top ⅛), upper body (top ½), lower body (bottom ½),
-and legs (bottom ¼).
-
-<p align="center">
-  <img src="img_paper/GoldenRatio.png" alt="Golden-ratio anatomical partitioning" width="420"/>
-</p>
-
-<p align="center"><em>Anatomical regions derived from golden-ratio proportions on the pedestrian bounding box.</em></p>
-
-### Experimental pipeline
-
-End-to-end workflow from input images and ground-truth boxes, through
-anatomically grounded occlusions and Cascade Mask R-CNN detection, to AblationCAM
-explanation maps and grid-based visualization (FLAS).
-
-<p align="center">
-  <img src="img_paper/CBMI_ExFMA.png" alt="Explainability pipeline overview" width="720"/>
-</p>
-
-<p align="center"><em>Overview of the explainability pipeline: input, occlusion variants, detector, AblationCAM maps, and grid visualization.</em></p>
-
-Interactive grid visualizations (full-body and body-part views, including
-CAM-thresholded variants) are provided as
-[supplementary material](https://galdi.eurecom.io/ExFMA2026_supplementary_material.html).
-
-### Average explanation heatmaps
-
-The figures below are **average AblationCAM heatmaps** (jet colormap) produced by
-`summarize_cam_heatmaps`. For each experiment, CAM maps are cropped to
-ground-truth pedestrian bounding boxes (aspect ratio &lt; 0.6), resized to a
-common 50×100 grid, and averaged over all qualifying detections. Warmer colors
-(red/yellow) indicate higher average model importance; cooler colors (blue)
-indicate lower importance.
-
-#### Baseline (full body, no occlusion)
-
-<p align="center">
-  <img src="img_paper/avg_full_jet.png" alt="Baseline average heatmap" width="120"/>
-</p>
-
-<p align="center"><em>avg_full_jet.png — average AblationCAM with no body-part occlusion.</em></p>
-
-#### Occlusion experiments
-
-Each panel shows how average attention shifts when a specific body region is
-replaced with its mean color before running the detector and CAM.
-
-<table align="center">
-  <tr>
-    <td align="center">
-      <img src="img_paper/avg_head_jet.png" alt="Head occlusion heatmap" width="120"/><br/>
-      <b>Head</b><br/>
-      <sub>Top ⅛ occluded</sub>
-    </td>
-    <td align="center">
-      <img src="img_paper/avg_upper_jet.png" alt="Upper body occlusion heatmap" width="120"/><br/>
-      <b>Upper body</b><br/>
-      <sub>Top half occluded</sub>
-    </td>
-    <td align="center">
-      <img src="img_paper/avg_lower_jet.png" alt="Lower body occlusion heatmap" width="120"/><br/>
-      <b>Lower body</b><br/>
-      <sub>Bottom half occluded</sub>
-    </td>
-    <td align="center">
-      <img src="img_paper/avg_legs_jet.png" alt="Legs occlusion heatmap" width="120"/><br/>
-      <b>Legs</b><br/>
-      <sub>Bottom quarter occluded</sub>
-    </td>
-  </tr>
-</table>
-
-<p align="center">
-  <em>
-    Left to right: head, upper body, lower body, and legs occlusion experiments.
-    Under upper-body occlusion, attention shifts toward the lower body; under
-    lower-body occlusion, importance concentrates on the head and torso.
-  </em>
-</p>
-
-To reproduce these figures, run step 3 with the corresponding
-`--occlusion-region`, then step 5 pointing `--cam-dir` at the matching output
-folder. Apply a jet colormap when preparing figures for publication.
-
-## Further reading
-
-- [EXPERIMENTS.md](EXPERIMENTS.md) — pipeline details, environment variables, legacy script names
-- [INSTALL.md](INSTALL.md) — full Pedestron installation guide
-- [Pedestron](https://github.com/hasanirtiza/Pedestron) — upstream pedestrian detection repository
-- [MMDetection](https://github.com/open-mmlab/mmdetection) — upstream object detection framework
-- [Supplementary grid visualizations](https://galdi.eurecom.io/ExFMA2026_supplementary_material.html) — interactive FLAS grid figures from the paper
-
-## Citation
-
-If you use this code, please cite our work:
-
-> *Semantically Grounded Explainability for Pedestrian Detection Using Anatomical Proportions and Grid-Based Visualization*  
-> Chiara Galdi and Romain Giot  
-> ExFMA special session at CBMI 2026
-
-## License
-
-See [LICENSE](LICENSE).
+See the accompanying **LICENSE** file.
