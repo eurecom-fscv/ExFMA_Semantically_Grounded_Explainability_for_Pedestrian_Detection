@@ -326,4 +326,11 @@ If you use this repository, please cite:
 
 # License
 
-See the accompanying **LICENSE** file.
+The original code and scripts developed for this work are released under the **MIT License** (see the accompanying `LICENSE` file).
+
+This repository builds upon the following third-party projects:
+
+- **Pedestron**: https://github.com/hasanirtiza/Pedestron
+- **MMDetection**: https://github.com/open-mmlab/mmdetection
+
+These projects are distributed under their own respective licenses. Users are responsible for reviewing and complying with the licensing terms of Pedestron, MMDetection, and any other third-party dependencies before using, modifying, or redistributing this repository.
